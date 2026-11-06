@@ -49,7 +49,7 @@ Todos os componentes CORBA usam `127.0.0.1` (`-ORBServerHost 127.0.0.1`), para q
 
 ## Versão online (REST)
 
-A interface web está publicada no Render: **LINK_DO_RENDER** (substituir depois do primeiro deploy).
+A interface web está publicada no Render: **<https://banco-rest.onrender.com>**.
 
 - Deploy com `rest/Dockerfile` e `render.yaml`. Cada `git push` para `main` volta a publicar.
 - Plano grátis: após ~15 min sem uso o servidor adormece e o primeiro pedido demora ~30–60 s. As contas ficam em memória e perdem-se quando o servidor reinicia.
