@@ -46,3 +46,11 @@ teste\executar.bat
 Todos os componentes CORBA usam `127.0.0.1` (`-ORBServerHost 127.0.0.1`), para que os IORs não contenham o IP da rede. O `iniciar-naming.bat` apaga `corba\orb.db` antes de arrancar o `orbd`.
 
 **Entrega**: `criar-entrega.bat` cria `entrega-lab6.zip` sem a pasta `corba\orb.db`.
+
+## Versão online (REST)
+
+A interface web está publicada no Render: **LINK_DO_RENDER** (substituir depois do primeiro deploy).
+
+- Deploy com `rest/Dockerfile` e `render.yaml`. Cada `git push` para `main` volta a publicar.
+- Plano grátis: após ~15 min sem uso o servidor adormece e o primeiro pedido demora ~30–60 s. As contas ficam em memória e perdem-se quando o servidor reinicia.
+- Só a versão REST está online, porque os navegadores não falam IIOP. A versão CORBA corre localmente (ver acima).
