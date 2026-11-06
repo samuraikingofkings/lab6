@@ -1,0 +1,17 @@
+module SistemaBancario {
+    exception SaldoInsuficiente { string mensagem; };
+    exception OperacaoInvalida { string mensagem; };
+
+    interface Banco {
+        void criarConta(in string numero, in string titular, in double saldoInicial)
+            raises (OperacaoInvalida);
+        double consultarSaldo(in string numero)
+            raises (OperacaoInvalida);
+        void depositar(in string numero, in double valor)
+            raises (OperacaoInvalida);
+        void sacar(in string numero, in double valor)
+            raises (SaldoInsuficiente, OperacaoInvalida);
+        void transferir(in string origem, in string destino, in double valor)
+            raises (SaldoInsuficiente, OperacaoInvalida);
+    };
+};

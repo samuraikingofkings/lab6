@@ -1,0 +1,9 @@
+# Gerados pela compilacao ou em execucao
+corba/orb.db/
+corba/bin/
+corba/gerado/
+teste/bin/
+rest/build/
+rest/.gradle/
+.idea/
+*.zip

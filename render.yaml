@@ -1,0 +1,10 @@
+# Blueprint do Render: publica a versao REST (interface web + API) a partir de rest/Dockerfile
+services:
+  - type: web
+    name: banco-rest
+    runtime: docker
+    plan: free
+    rootDir: rest
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /

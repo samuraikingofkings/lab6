@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --cobalto: #1b2f8f;
+    --cobalto-escuro: #14236c;
+    --tinta: #16203f;
+    --cinza: #5c6682;
+    --linha: #dde2ee;
+    --papel: #ffffff;
+    --destaque: #e8edff;
+    --erro: #a81f1a;
+    --sucesso: #14694c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(340px, 440px) 1fr;
+    background: var(--papel);
+    color: var(--tinta);
+    font: 400 16px/1.5 "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  button, input { font: inherit; }
+
+  .painel {
+    background: var(--cobalto);
+    color: #fff;
+    padding: 40px;
+  }
+  h1 { margin: 0 0 32px; font-size: 20px; font-weight: 600; }
+
+  .operacoes { display: grid; gap: 2px; margin: 0 -12px 32px; }
+  .operacoes button {
+    padding: 4px 12px;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: #fff;
+    opacity: .72;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -.01em;
+    text-align: left;
+    cursor: pointer;
+  }
+  .operacoes button:hover { opacity: 1; }
+  .operacoes button[aria-pressed="true"] { background: var(--cobalto-escuro); opacity: 1; font-weight: 700; }
+
+  form { display: grid; gap: 16px; }
+  label { display: grid; gap: 4px; font-size: 14px; font-weight: 500; }
+  label[hidden] { display: none; }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--tinta);
+  }
+  .enviar {
+    padding: 12px 16px;
+    border: 0;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--cobalto);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .enviar:hover { background: var(--destaque); }
+  .enviar:disabled { opacity: .6; cursor: wait; }
+  :focus-visible { outline: 3px solid #ffd666; outline-offset: 2px; }
+
+  #mensagem { margin: 16px 0 0; padding: 12px; border-radius: 4px; background: #fff; font-weight: 500; }
+  #mensagem:empty { display: none; }
+  #mensagem.sucesso { color: var(--sucesso); }
+  #mensagem.erro { color: var(--erro); }
+
+  .contas { padding: 40px clamp(24px, 6vw, 88px); min-width: 0; }
+  h2 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+  .dica { margin: 0 0 24px; color: var(--cinza); }
+  #lista { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--linha); }
+  #lista li { border-bottom: 1px solid var(--linha); }
+  .conta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 4px 24px;
+    width: 100%;
+    padding: 16px 8px;
+    border: 0;
+    background: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .conta:hover { background: #f5f7fc; }
+  .conta:focus-visible { outline-color: var(--cobalto); outline-offset: -3px; }
+  .numero { display: block; font-weight: 600; overflow-wrap: anywhere; }
+  .titular { display: block; color: var(--cinza); }
+  .saldo { font-size: 36px; font-weight: 500; line-height: 1.2; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .alterada { animation: destacar 1.4s ease-out; }
+  @keyframes destacar { from { background: var(--destaque); } to { background: transparent; } }
+  @media (prefers-reduced-motion: reduce) { .alterada { animation: none; } }
+
+  @media (max-width: 760px) {
+    body { display: block; }
+    .painel, .contas { padding: 24px 16px; }
+    .operacoes button { font-size: 24px; }
+    .saldo { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<main class="painel">
+  <h1>Banco</h1>
+
+  <div class="operacoes" id="operacoes" role="group" aria-label="Operação"></div>
+
+  <form id="formulario">
+    <label data-campo="numero">Número da conta
+      <input name="numero" list="numeros" autocomplete="off" pattern="[A-Za-z0-9\-]+" title="Use apenas letras, números e hífens">
+    </label>
+    <label data-campo="titular">Titular
+      <input name="titular" autocomplete="off">
+    </label>
+    <label data-campo="saldoInicial">Saldo inicial
+      <input name="saldoInicial" type="number" min="0" step="0.01" inputmode="decimal">
+    </label>
+    <label data-campo="origem">Conta de origem
+      <input name="origem" list="numeros" autocomplete="off" pattern="[A-Za-z0-9\-]+" title="Use apenas letras, números e hífens">
+    </label>
+    <label data-campo="destino">Conta de destino
+      <input name="destino" list="numeros" autocomplete="off" pattern="[A-Za-z0-9\-]+" title="Use apenas letras, números e hífens">
+    </label>
+    <label data-campo="valor">Valor
+      <input name="valor" type="number" min="0.01" step="0.01" inputmode="decimal">
+    </label>
+    <button class="enviar" id="enviar"></button>
+  </form>
+  <datalist id="numeros"></datalist>
+
+  <p id="mensagem" role="status"></p>
+</main>
+
+<section class="contas" aria-labelledby="titulo-contas">
+  <h2 id="titulo-contas">Contas</h2>
+  <p class="dica" id="dica"></p>
+  <ul id="lista"></ul>
+</section>
+
+<script>
+  const API = "/api/conta";
+  const CHAVE = "banco.contas";
+
+  const OPERACOES = {
+    criar: { nome: "Criar conta", campos: ["numero", "titular", "saldoInicial"] },
+    consultar: { nome: "Consultar saldo", campos: ["numero"] },
+    depositar: { nome: "Depositar", campos: ["numero", "valor"] },
+    sacar: { nome: "Sacar", campos: ["numero", "valor"] },
+    transferir: { nome: "Transferir", campos: ["origem", "destino", "valor"] }
+  };
+
+  const form = document.getElementById("formulario");
+  const mensagem = document.getElementById("mensagem");
+  const botaoEnviar = document.getElementById("enviar");
+  const lista = document.getElementById("lista");
+
+  let operacao = "criar";
+  let contas = carregarContas();
+
+  // A API nao tem uma operacao para listar contas, por isso a pagina recorda as que ja usou
+  function carregarContas() {
+    try {
+      return JSON.parse(localStorage.getItem(CHAVE)) || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function guardarContas() {
+    try {
+      localStorage.setItem(CHAVE, JSON.stringify(contas));
+    } catch (e) {
+      // Sem armazenamento, a lista dura apenas enquanto a pagina estiver aberta
+    }
+  }
+
+  function dinheiro(valor) {
+    return Number(valor).toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" });
+  }
+
+  async function pedir(metodo, caminho, parametros) {
+    const consulta = parametros ? "?" + new URLSearchParams(parametros) : "";
+    let resposta;
+    try {
+      resposta = await fetch(API + caminho + consulta, { method: metodo });
+    } catch (e) {
+      throw new Error("O servidor não respondeu. Inicie-o com rest\\iniciar-servidor.bat e tente de novo.");
+    }
+    const dados = await resposta.json().catch(() => null);
+    if (!resposta.ok) {
+      const erro = new Error(dados && dados.message ? dados.message : "O pedido falhou (HTTP " + resposta.status + ").");
+      erro.estado = resposta.status;
+      throw erro;
+    }
+    return dados;
+  }
+
+  function caminhoConta(numero, acao) {
+    return "/" + encodeURIComponent(numero) + "/" + acao;
+  }
+
+  function registar(numero, saldo, titular) {
+    let conta = contas.find(c => c.numero === numero);
+    if (!conta) {
+      conta = { numero: numero, titular: titular || "" };
+      contas.push(conta);
+    }
+    conta.saldo = saldo;
+    if (titular) conta.titular = titular;
+  }
+
+  async function atualizar(numero) {
+    const dados = await pedir("GET", caminhoConta(numero, "saldo"));
+    registar(dados.numero, dados.saldo);
+    return dados.saldo;
+  }
+
+  const ACOES = {
+    async criar(v) {
+      const dados = await pedir("POST", "", { numero: v.numero, titular: v.titular, saldoInicial: v.saldoInicial });
+      registar(dados.numero, dados.saldo, v.titular);
+      return { texto: "Conta " + v.numero + " criada com saldo de " + dinheiro(dados.saldo) + ".", alteradas: [v.numero] };
+    },
+    async consultar(v) {
+      const saldo = await atualizar(v.numero);
+      return { texto: "Saldo da conta " + v.numero + ": " + dinheiro(saldo) + ".", alteradas: [v.numero] };
+    },
+    async depositar(v) {
+      const dados = await pedir("POST", caminhoConta(v.numero, "depositar"), { valor: v.valor });
+      registar(dados.numero, dados.saldo);
+      return { texto: "Depositado " + dinheiro(v.valor) + " na conta " + v.numero + ". Saldo: " + dinheiro(dados.saldo) + ".", alteradas: [v.numero] };
+    },
+    async sacar(v) {
+      const dados = await pedir("POST", caminhoConta(v.numero, "sacar"), { valor: v.valor });
+      registar(dados.numero, dados.saldo);
+      return { texto: "Sacado " + dinheiro(v.valor) + " da conta " + v.numero + ". Saldo: " + dinheiro(dados.saldo) + ".", alteradas: [v.numero] };
+    },
+    async transferir(v) {
+      await pedir("POST", "/transferir", { origem: v.origem, destino: v.destino, valor: v.valor });
+      await atualizar(v.origem);
+      await atualizar(v.destino);
+      return { texto: "Transferido " + dinheiro(v.valor) + " da conta " + v.origem + " para a conta " + v.destino + ".", alteradas: [v.origem, v.destino] };
+    }
+  };
+
+  function mostrarMensagem(texto, tipo) {
+    mensagem.textContent = texto;
+    mensagem.className = tipo;
+  }
+
+  function desenharOperacoes() {
+    const caixa = document.getElementById("operacoes");
+    caixa.replaceChildren();
+    for (const [chave, op] of Object.entries(OPERACOES)) {
+      const botao = document.createElement("button");
+      botao.type = "button";
+      botao.textContent = op.nome;
+      botao.setAttribute("aria-pressed", String(chave === operacao));
+      botao.addEventListener("click", () => escolher(chave));
+      caixa.append(botao);
+    }
+  }
+
+  function escolher(chave) {
+    operacao = chave;
+    const campos = OPERACOES[chave].campos;
+    document.querySelectorAll("label[data-campo]").forEach(label => {
+      const ativo = campos.includes(label.dataset.campo);
+      label.hidden = !ativo;
+      const input = label.querySelector("input");
+      input.required = ativo;
+      // Um campo escondido com valor invalido nao pode bloquear o envio
+      input.disabled = !ativo;
+    });
+    botaoEnviar.textContent = OPERACOES[chave].nome;
+    mostrarMensagem("", "");
+    desenharOperacoes();
+  }
+
+  function desenharContas(alteradas) {
+    guardarContas();
+    document.getElementById("dica").textContent = contas.length
+      ? "Clique numa conta para a usar na operação."
+      : "Ainda não há contas. Crie a primeira no painel ao lado.";
+    document.getElementById("numeros").replaceChildren(...contas.map(c => {
+      const opcao = document.createElement("option");
+      opcao.value = c.numero;
+      return opcao;
+    }));
+    lista.replaceChildren(...contas.map(conta => {
+      const item = document.createElement("li");
+      const botao = document.createElement("button");
+      botao.type = "button";
+      botao.className = "conta";
+      if (alteradas && alteradas.includes(conta.numero)) botao.classList.add("alterada");
+
+      const identificacao = document.createElement("span");
+      const numero = document.createElement("span");
+      numero.className = "numero";
+      numero.textContent = conta.numero;
+      identificacao.append(numero);
+      if (conta.titular) {
+        const titular = document.createElement("span");
+        titular.className = "titular";
+        titular.textContent = conta.titular;
+        identificacao.append(titular);
+      }
+
+      const saldo = document.createElement("span");
+      saldo.className = "saldo";
+      saldo.textContent = conta.saldo === undefined ? "–" : dinheiro(conta.saldo);
+
+      botao.append(identificacao, saldo);
+      botao.addEventListener("click", () => usarConta(conta.numero));
+      item.append(botao);
+      return item;
+    }));
+  }
+
+  function usarConta(numero) {
+    if (operacao === "criar") escolher("consultar");
+    if (operacao === "transferir") {
+      const origem = form.elements.origem;
+      const destino = form.elements.destino;
+      if (!origem.value || destino.value) {
+        origem.value = numero;
+        destino.value = "";
+        destino.focus();
+      } else {
+        destino.value = numero;
+        form.elements.valor.focus();
+      }
+      return;
+    }
+    form.elements.numero.value = numero;
+    if (operacao === "consultar") {
+      botaoEnviar.focus();
+    } else {
+      form.elements.valor.focus();
+    }
+  }
+
+  form.addEventListener("submit", async evento => {
+    evento.preventDefault();
+    const valores = Object.fromEntries(new FormData(form));
+    for (const chave of Object.keys(valores)) valores[chave] = valores[chave].trim();
+
+    botaoEnviar.disabled = true;
+    try {
+      const resultado = await ACOES[operacao](valores);
+      mostrarMensagem(resultado.texto, "sucesso");
+      desenharContas(resultado.alteradas);
+      if (operacao === "criar") form.reset();
+      form.elements.valor.value = "";
+    } catch (erro) {
+      mostrarMensagem(erro.message, "erro");
+    } finally {
+      botaoEnviar.disabled = false;
+    }
+  });
+
+  // Atualiza os saldos ao abrir. As contas desaparecem quando o servidor reinicia, porque vivem em memoria.
+  async function iniciar() {
+    escolher("criar");
+    desenharContas();
+    const lembradas = contas.slice();
+    let saiuConta = false;
+    for (const conta of lembradas) {
+      try {
+        await atualizar(conta.numero);
+      } catch (erro) {
+        if (erro.estado === 404) {
+          contas = contas.filter(c => c.numero !== conta.numero);
+          saiuConta = true;
+        } else {
+          mostrarMensagem(erro.message, "erro");
+          return;
+        }
+      }
+    }
+    desenharContas();
+    if (saiuConta) mostrarMensagem("Algumas contas já não existem porque o servidor foi reiniciado.", "erro");
+  }
+
+  iniciar();
+</script>
+</body>
+</html>
